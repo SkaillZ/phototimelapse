@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Photo upload</title>
+    <script src="/js/index.js"></script>
+  </head>
+  <body>
+    <video id="camera-video"></video>
+
+    <form>
+      <label for="name">Name:</label>
+      <input name="name" id="name">
+      <button type="button" id="submit-button" disabled>Submit</button>
+    </form>
+  </body>
+</html>
