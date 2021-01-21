@@ -28,9 +28,11 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-}));
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  })
+);
 
 // Custom middleware for adding the RabbitMQ channel
 app.use((req, res, next) => {
@@ -60,7 +62,7 @@ connectAndListen();
 
 function connectAndListen(retries = 0) {
   console.log(`Connecting to RabbitMQ on ${RABBIT_MQ_SERVER}...`);
-  
+
   // Connect to RabbitMQ
   ampq.connect(`amqp://${RABBIT_MQ_SERVER}`, (err0, connection) => {
     if (err0) {
@@ -81,17 +83,18 @@ function connectAndListen(retries = 0) {
       server.listen(port, () => {
         console.log(`Listening on port ${port}.`);
       });
-
     });
   });
 }
 
-
 function retryConnection(retries, err) {
   // Retry connecting until RabbitMQ is up
   if (retries < RABBIT_MQ_CONNECTION_RETRIES) {
-    console.error("Retrying due to error: " + err.message);
-    setTimeout(() => connectAndListen(retries + 1), RABBIT_MQ_CONNECTION_RETRY_WAIT * 1000);
+    console.error('Retrying due to error: ' + err.message);
+    setTimeout(
+      () => connectAndListen(retries + 1),
+      RABBIT_MQ_CONNECTION_RETRY_WAIT * 1000
+    );
   } else {
     throw err;
   }

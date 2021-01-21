@@ -12,9 +12,7 @@ const RABBIT_MQ_CONNECTION_RETRIES = 10;
 const RABBIT_MQ_CONNECTION_RETRY_WAIT = 5;
 
 const QUEUE = 'image-notify';
-const MUSIC_TRACKS = [
-  'cursed-music/tiny-woods.mp3'
-];
+const MUSIC_TRACKS = ['cursed-music/tiny-woods.mp3'];
 
 const RABBIT_MQ_SERVER = process.env.RABBIT_MQ_SERVER;
 if (!RABBIT_MQ_SERVER) {
@@ -52,7 +50,7 @@ function connect(retries = 0) {
       // finished (the acknowledgement has been sent).
       channel.prefetch(1);
 
-      channel.consume(QUEUE, async msg => {
+      channel.consume(QUEUE, async (msg) => {
         let { name } = JSON.parse(msg.content.toString());
         if (!name) {
           console.error('Invalid request from queue!');
@@ -72,37 +70,40 @@ function connect(retries = 0) {
           console.error(e);
         }
       });
-
     });
   });
 }
 
 async function generateVideo(name) {
-  const fileUrls = (await axios.get(`${FILE_API_URL}/${name}/index`)).data.files;
+  const fileUrls = (await axios.get(`${FILE_API_URL}/${name}/index`)).data
+    .files;
 
   // Download the images to a temp directory
   let tmpFolder = await mkdtemp(`${tmpdir()}${sep}`);
   let downloadedFiles = await Promise.all(
-    fileUrls.map(file =>  axios.get(file, { responseType: 'stream' }))
+    fileUrls.map((file) => axios.get(file, { responseType: 'stream' }))
   );
 
   await Promise.all(
-    downloadedFiles.map(response => new Promise((resolve, reject) => {
-      // Extract the file name from the request URL
-      let fileName = basename(response.request.path);
+    downloadedFiles.map(
+      (response) =>
+        new Promise((resolve, reject) => {
+          // Extract the file name from the request URL
+          let fileName = basename(response.request.path);
 
-      // Save to temp directory
-      let writer = createWriteStream(join(tmpFolder, fileName));
-      response.data.pipe(writer);
+          // Save to temp directory
+          let writer = createWriteStream(join(tmpFolder, fileName));
+          response.data.pipe(writer);
 
-      writer.on('error', err => {
-        writer.close();
-        reject(err);
-      });
-      writer.on('close', () => {
-        resolve();
-      });
-    }))
+          writer.on('error', (err) => {
+            writer.close();
+            reject(err);
+          });
+          writer.on('close', () => {
+            resolve();
+          });
+        })
+    )
   );
 
   // Create video with ffmpeg
@@ -128,8 +129,12 @@ async function generateVideo(name) {
   // Upload to the file API
   let form = new FormData();
   form.append('name', name);
-  form.append('video', createReadStream(outputPath), { filename: basename(outputPath) });
-  await axios.post(`${FILE_API_URL}/video`, form, { headers: form.getHeaders() });
+  form.append('video', createReadStream(outputPath), {
+    filename: basename(outputPath),
+  });
+  await axios.post(`${FILE_API_URL}/video`, form, {
+    headers: form.getHeaders(),
+  });
 
   // Clean up the temp folder
   await rm(tmpFolder, { recursive: true, force: true });
@@ -138,8 +143,11 @@ async function generateVideo(name) {
 function retryConnection(retries, err) {
   // Retry connecting until RabbitMQ is up
   if (retries < RABBIT_MQ_CONNECTION_RETRIES) {
-    console.error("Retrying due to error: " + err.message);
-    setTimeout(() => connect(retries + 1), RABBIT_MQ_CONNECTION_RETRY_WAIT * 1000);
+    console.error('Retrying due to error: ' + err.message);
+    setTimeout(
+      () => connect(retries + 1),
+      RABBIT_MQ_CONNECTION_RETRY_WAIT * 1000
+    );
   } else {
     throw err;
   }
