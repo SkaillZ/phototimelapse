@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     context.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
 
     // Convert to JPEG
-    captureCanvas.toBlob(async jpegData => {
+    captureCanvas.toBlob(async (jpegData) => {
       // Send
       var formData = new FormData();
       formData.append('name', nameText.value);

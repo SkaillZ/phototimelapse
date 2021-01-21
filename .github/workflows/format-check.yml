@@ -1,0 +1,24 @@
+name: format-check
+
+# Run this workflow every time a new commit pushed to your repository
+on: push
+
+jobs:
+  format-check:
+    name: Check formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run linters
+        run: npx prettier --check .

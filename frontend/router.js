@@ -34,16 +34,18 @@ router.post('/upload', async (req, res) => {
   let form = new FormData();
   form.append('name', req.body.name);
   form.append('image', req.files.image.data, { filename });
-  
+
   // Upload the file to the file REST API
   try {
-    await axios.post(`${FILE_API_URL}/image`, form, { headers: form.getHeaders() });
+    await axios.post(`${FILE_API_URL}/image`, form, {
+      headers: form.getHeaders(),
+    });
 
     // RabbitMQ message
     let message = { name: req.body.name };
     req.channel.assertQueue(QUEUE, { durable: false });
     if (!req.channel.sendToQueue(QUEUE, Buffer.from(JSON.stringify(message)))) {
-      throw new Error('Couldn\'t send to queue.');
+      throw new Error("Couldn't send to queue.");
     }
   } catch (e) {
     res.status(500).send('An error occured while handling the uploaded image.');

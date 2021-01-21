@@ -7,16 +7,18 @@ let fileUpload = require('express-fileupload');
 const UPLOAD_DIR = process.env.UPLOAD_DIR || join(__dirname, 'uploads');
 
 let app = express();
-let port = process.env.PORT || 3001;
+let port = process.env.PORT || 3001;
 
 app.use(express.urlencoded({ extended: true }));
 
 // Implements retrieving files via GET
 app.use(express.static(UPLOAD_DIR));
 
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-}));
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  })
+);
 
 if (!existsSync(UPLOAD_DIR)) {
   // Ensure that the upload directory exists
@@ -33,10 +35,10 @@ app.get('*/index', async (req, res) => {
   try {
     let files = await readdir(join(UPLOAD_DIR, dirPath));
     let filesWithUrl = files
-      .map(file => join(dirPath, file))
-      .map(file => `${req.protocol}://${req.get('host')}${file}`);
+      .map((file) => join(dirPath, file))
+      .map((file) => `${req.protocol}://${req.get('host')}${file}`);
     res.status(200).json({ files: filesWithUrl });
-  } catch(e) {
+  } catch (e) {
     res.status(404).json({ files: [] });
   }
 });
@@ -62,7 +64,7 @@ app.post('/image', async (req, res) => {
 
   try {
     await writeFile(join(nameDir, fileName), req.files.image.data);
-  } catch(e) {
+  } catch (e) {
     res.status(500).send('Saving the uploaded file failed.');
     return;
   }
@@ -81,7 +83,7 @@ app.post('/video', async (req, res) => {
 
   try {
     await writeFile(join(UPLOAD_DIR, fileName), req.files.video.data);
-  } catch(e) {
+  } catch (e) {
     res.status(500).send('Saving the uploaded file failed.');
     return;
   }

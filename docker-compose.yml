@@ -1,9 +1,9 @@
-version: "3.9"
+version: '3.9'
 services:
   frontend:
     build: frontend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     links:
       - rabbitmq
       - file-api
@@ -20,7 +20,7 @@ services:
   file-api:
     build: file-api
     ports:
-      - "3001:3001"
+      - '3001:3001'
     volumes:
       - ./file-api/uploads:/file-api/uploads
 
@@ -35,6 +35,6 @@ services:
     environment:
       - FILE_API_URL=http://file-api:3001
       - RABBIT_MQ_SERVER=rabbitmq
-    
+
   rabbitmq:
     image: rabbitmq:3-alpine
