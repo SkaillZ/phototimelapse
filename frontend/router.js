@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
 
 // File upload
 router.post('/upload', async (req, res) => {
-  if (!req.body.name && req.files.image) {
+  if (!(req.body.name && req.files.image)) {
     res.status(400).send('Invalid request data.');
     return;
   }
@@ -36,7 +36,7 @@ router.post('/upload', async (req, res) => {
     await axios.post(`${FILE_API_URL}/image`, form, { headers: form.getHeaders() });
 
     // RabbitMQ message
-    let message = { name: req.body.name, filename };
+    let message = { name: req.body.name };
     req.channel.assertQueue(QUEUE, { durable: false });
     if (!req.channel.sendToQueue(QUEUE, Buffer.from(JSON.stringify(message)))) {
       throw new Error('Couldn\'t send to queue.');
