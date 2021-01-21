@@ -11,6 +11,9 @@
       <label for="name">Name:</label>
       <input name="name" id="name">
       <button type="button" id="submit-button" disabled>Submit</button>
+      <button type="button" id="view-video-button" data-file-api-url="{{ fileApiUrl }}">
+        View video
+      </button>
     </form>
   </body>
 </html>

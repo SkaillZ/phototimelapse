@@ -18,7 +18,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(fileUpload({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  debug: true,
 }));
 
 app.use('/', router);
