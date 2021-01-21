@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // View the video from the File API
   viewVideoButton.addEventListener('click', () => {
+    let videoName = encodeURIComponent(nameText.value);
     let fileApiUrl = viewVideoButton.getAttribute('data-file-api-url');
-    window.location = `${fileApiUrl}/${nameText.value}/timelapse.mp4`;
+    window.location = `${fileApiUrl}/${videoName}.mp4`;
   });
 });
