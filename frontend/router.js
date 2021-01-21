@@ -4,6 +4,8 @@ let FormData = require('form-data');
 
 let router = express.Router();
 
+const QUEUE = 'image-notify';
+
 const FILE_API_URL = process.env.FILE_API_URL;
 if (!FILE_API_URL) {
   throw new Error('FILE_API_URL variable not set!');
@@ -29,12 +31,21 @@ router.post('/upload', async (req, res) => {
   form.append('name', req.body.name);
   form.append('image', req.files.image.data, { filename });
   
+  // Upload the file to the file REST API
   try {
-    axios.post(`${FILE_API_URL}/image`, form, { headers: form.getHeaders() });
+    await axios.post(`${FILE_API_URL}/image`, form, { headers: form.getHeaders() });
+
+    // RabbitMQ message
+    let message = { name: req.body.name, filename };
+    req.channel.assertQueue(QUEUE, { durable: false });
+    if (!req.channel.sendToQueue(QUEUE, Buffer.from(JSON.stringify(message)))) {
+      throw new Error('Couldn\'t send to queue.');
+    }
   } catch (e) {
-    res.status(500).send('File upload to API failed.');
+    res.status(500).send('An error occured while handling the uploaded image.');
     return;
   }
+
   res.status(200).send('OK');
 });
 

@@ -7,4 +7,6 @@ COPY . .
 RUN npm ci
 EXPOSE 3001
 
+VOLUME /uploads
+
 CMD ["npm", "start"]
