@@ -8,6 +8,9 @@ let ampq = require('amqplib/callback_api');
 
 let router = require('./router');
 
+const RABBIT_MQ_CONNECTION_RETRIES = 10;
+const RABBIT_MQ_CONNECTION_RETRY_WAIT = 5;
+
 const port = process.env.PORT || 3000;
 const RABBIT_MQ_SERVER = process.env.RABBIT_MQ_SERVER;
 if (!RABBIT_MQ_SERVER) {
@@ -53,26 +56,43 @@ app.use((err, req, res, next) => {
   res.render('error');
 });
 
-// Connect to RabbitMQ
-console.log(`Connecting to RabbitMQ on ${RABBIT_MQ_SERVER}...`);
-ampq.connect(`amqp://${RABBIT_MQ_SERVER}`, (err0, connection) => {
-  if (err0) {
-    throw err0;
-  }
+connectAndListen();
 
-  connection.createChannel((err1, channel) => {
-    if (err1) {
-      throw err1;
+function connectAndListen(retries = 0) {
+  console.log(`Connecting to RabbitMQ on ${RABBIT_MQ_SERVER}...`);
+  
+  // Connect to RabbitMQ
+  ampq.connect(`amqp://${RABBIT_MQ_SERVER}`, (err0, connection) => {
+    if (err0) {
+      retryConnection(retries, err0);
+      return;
     }
 
-    console.log('Connected to RabbitMQ.');
-    rabbitMQChannel = channel;
+    connection.createChannel((err1, channel) => {
+      if (err0) {
+        retryConnection(retries, err1);
+        return;
+      }
 
-    let server = http.createServer(app);
-    server.listen(port, () => {
-      console.log(`Listening on port ${port}.`);
+      console.log('Connected to RabbitMQ.');
+      rabbitMQChannel = channel;
+
+      let server = http.createServer(app);
+      server.listen(port, () => {
+        console.log(`Listening on port ${port}.`);
+      });
+
     });
-
   });
-})
+}
 
+
+function retryConnection(retries, err) {
+  // Retry connecting until RabbitMQ is up
+  if (retries < RABBIT_MQ_CONNECTION_RETRIES) {
+    console.error("Retrying due to error: " + err.message);
+    setTimeout(() => connectAndListen(retries + 1), RABBIT_MQ_CONNECTION_RETRY_WAIT * 1000);
+  } else {
+    throw err;
+  }
+}

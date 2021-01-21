@@ -8,6 +8,9 @@ let FormData = require('form-data');
 let ampq = require('amqplib/callback_api');
 let ffmpeg = require('fluent-ffmpeg');
 
+const RABBIT_MQ_CONNECTION_RETRIES = 10;
+const RABBIT_MQ_CONNECTION_RETRY_WAIT = 5;
+
 const QUEUE = 'image-notify';
 const MUSIC_TRACKS = [
   'cursed-music/tiny-woods.mp3'
@@ -23,43 +26,56 @@ if (!FILE_API_URL) {
   throw new Error('FILE_API_URL variable not set!');
 }
 
-// Connect to RabbitMQ
-console.log(`Connecting to RabbitMQ on ${RABBIT_MQ_SERVER}...`);
-ampq.connect(`amqp://${RABBIT_MQ_SERVER}`, (err0, connection) => {
-  if (err0) {
-    throw err0;
-  }
+connect();
 
-  connection.createChannel((err1, channel) => {
-    if (err1) {
-      throw err1;
+function connect(retries = 0) {
+  console.log(`Connecting to RabbitMQ on ${RABBIT_MQ_SERVER}...`);
+
+  // Connect to RabbitMQ
+  ampq.connect(`amqp://${RABBIT_MQ_SERVER}`, (err0, connection) => {
+    if (err0) {
+      retryConnection(retries, err0);
+      return;
     }
 
-    console.log('Connected to RabbitMQ. Waiting for messages...');
-
-    channel.consume(QUEUE, async msg => {
-      let { name } = JSON.parse(msg.content.toString());
-      if (!name) {
-        console.error('Invalid request from queue!');
+    connection.createChannel((err1, channel) => {
+      if (err0) {
+        retryConnection(retries, err1);
         return;
       }
 
-      console.log(`Received request to generate video with name '${name}'`);
+      console.log('Connected to RabbitMQ. Waiting for messages...');
 
-      try {
-        await generateVideo(name);
+      channel.assertQueue(QUEUE, { durable: false });
 
-        console.log(`Video for '${name}' has been successfully generated.`);
+      // Make sure that the messages only get consumed after the previous video conversion has
+      // finished (the acknowledgement has been sent).
+      channel.prefetch(1);
 
-        // Send acknowledgement once we've successfully updated the video
-        channel.ack(msg);
-      } catch (e) {
-        console.error(e);
-      }
+      channel.consume(QUEUE, async msg => {
+        let { name } = JSON.parse(msg.content.toString());
+        if (!name) {
+          console.error('Invalid request from queue!');
+          return;
+        }
+
+        console.log(`Received request to generate video with name '${name}'`);
+
+        try {
+          await generateVideo(name);
+
+          console.log(`Video for '${name}' has been successfully generated.`);
+
+          // Send acknowledgement once we've successfully updated the video
+          channel.ack(msg);
+        } catch (e) {
+          console.error(e);
+        }
+      });
+
     });
-
   });
-})
+}
 
 async function generateVideo(name) {
   const fileUrls = (await axios.get(`${FILE_API_URL}/${name}/index`)).data.files;
@@ -104,7 +120,6 @@ async function generateVideo(name) {
       .format('mp4')
       .size('?x720')
       .addOption('-shortest') // Trim the audio to the video length
-      .on('start', commandLine => console.log(`Spawned ffmpeg with '${commandLine}'`))
       .on('error', reject)
       .on('end', resolve)
       .save(outputPath);
@@ -118,4 +133,14 @@ async function generateVideo(name) {
 
   // Clean up the temp folder
   await rm(tmpFolder, { recursive: true, force: true });
+}
+
+function retryConnection(retries, err) {
+  // Retry connecting until RabbitMQ is up
+  if (retries < RABBIT_MQ_CONNECTION_RETRIES) {
+    console.error("Retrying due to error: " + err.message);
+    setTimeout(() => connect(retries + 1), RABBIT_MQ_CONNECTION_RETRY_WAIT * 1000);
+  } else {
+    throw err;
+  }
 }

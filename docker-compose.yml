@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  frontend:
+    build: frontend
+    ports:
+      - "3000:3000"
+    links:
+      - rabbitmq
+      - file-api
+    depends_on:
+      - rabbitmq
+      - file-api
+    environment:
+      # Used in the internal docker network for the file upload between frontend server and API
+      - FILE_API_URL=http://file-api:3001
+      # Used to embed the video in the browser
+      - FILE_API_URL_EXTERNAL=http://localhost:3001
+      - RABBIT_MQ_SERVER=rabbitmq
+
+  file-api:
+    build: file-api
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./file-api/uploads:/file-api/uploads
+
+  worker:
+    build: worker
+    links:
+      - rabbitmq
+      - file-api
+    depends_on:
+      - rabbitmq
+      - file-api
+    environment:
+      - FILE_API_URL=http://file-api:3001
+      - RABBIT_MQ_SERVER=rabbitmq
+    
+  rabbitmq:
+    image: rabbitmq:3-alpine

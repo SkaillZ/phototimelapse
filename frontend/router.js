@@ -6,14 +6,18 @@ let router = express.Router();
 
 const QUEUE = 'image-notify';
 
+// Used in the internal docker network for the file upload between frontend server and API
 const FILE_API_URL = process.env.FILE_API_URL;
 if (!FILE_API_URL) {
   throw new Error('FILE_API_URL variable not set!');
 }
 
+// Used to embed the video in the browser
+const FILE_API_URL_EXTERNAL = process.env.FILE_API_URL_EXTERNAL || FILE_API_URL;
+
 // GET the home page
 router.get('/', (req, res) => {
-  res.render('index', { fileApiUrl: FILE_API_URL });
+  res.render('index', { fileApiUrl: FILE_API_URL_EXTERNAL });
 });
 
 // File upload
