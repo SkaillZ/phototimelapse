@@ -1,0 +1,15 @@
+{
+  "name": "file-api",
+  "version": "1.0.0",
+  "description": "Photo timelapse file REST API",
+  "main": "index.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1"
+  }
+}

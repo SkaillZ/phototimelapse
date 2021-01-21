@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   let video = document.getElementById('camera-video');
   let submitButton = document.getElementById('submit-button');
+  let viewVideoButton = document.getElementById('view-video-button');
   let nameText = document.getElementById('name');
 
   // Show the video stream
@@ -38,5 +39,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert(`An error occured: ${e}`);
       }
     }, 'image/jpeg');
+  });
+
+  // View the video from the File API
+  viewVideoButton.addEventListener('click', () => {
+    let fileApiUrl = viewVideoButton.getAttribute('data-file-api-url');
+    window.location = `${fileApiUrl}/${nameText.value}/timelapse.mp4`;
   });
 });
