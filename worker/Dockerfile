@@ -1,5 +1,8 @@
 FROM node:14-alpine
 
+# Install ffmpeg
+RUN apk add  --no-cache ffmpeg
+
 # Copy everything
 COPY . .
 
