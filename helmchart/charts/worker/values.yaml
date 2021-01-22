@@ -2,7 +2,7 @@ subname: worker
 annotations:
   enabled: false
 container:
-  image: skaillz/phototimelapse-worker:latest-dev
+  image: skaillz/phototimelapse-worker:latest
   ports: 
       singlePort: true
       port: 80
