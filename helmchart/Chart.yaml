@@ -1,0 +1,9 @@
+apiVersion: v2
+name: phototimelapse
+description: A Helm chart for a phototimelapse website
+
+type: application
+
+version: 1.0.0
+
+appVersion: 1.0.0

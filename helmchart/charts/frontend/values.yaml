@@ -1,0 +1,21 @@
+subname: frontend
+annotations:
+  enabled: true
+container:
+  image: skaillz/phototimelapse-frontend:latest-dev
+  ports: 
+      singlePort: true
+      port: 3000
+      targetPort: 3000
+  env: 
+    - name: "FILE_API_URL"
+      value: "http://file-api-svc:3001"
+    - name: "FILE_API_URL_EXTERNAL"
+      value: "https://file-api.skaillz.net"
+    - name: "RABBIT_MQ_SERVER"
+      value: "rabbitmq-svc"
+service:
+  type: LoadBalancer
+pvc:
+  enabled: false
+

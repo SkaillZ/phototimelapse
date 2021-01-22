@@ -1,0 +1,8 @@
+name: phototimelapse
+ingress:
+  frontendDomain: phototimelapse.skaillz.net
+  frontendService: frontend-svc
+  frontendServicePort: 3000
+  fileapiDomain: file-api.skaillz.net
+  fileapiService: file-api-svc
+  fileapiServicePort: 3001

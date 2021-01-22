@@ -1,0 +1,20 @@
+subname: rabbitmq
+annotations:
+  enabled: false
+container:
+  image: rabbitmq:3-alpine
+  ports: 
+      singlePort: false
+      multiplePorts:
+        - port: 5671
+          name: port-one
+          targetPort: 5671
+        - port: 5672
+          name: port-two
+          targetPort: 5671
+  env: []
+service:
+  type: LoadBalancer
+pvc:
+  enabled: false
+

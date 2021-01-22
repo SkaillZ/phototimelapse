@@ -1,0 +1,17 @@
+subname: worker
+annotations:
+  enabled: false
+container:
+  image: skaillz/phototimelapse-worker:latest-dev
+  ports: 
+      singlePort: true
+      port: 80
+      targetPort: 80
+  env: 
+    - name: "FILE_API_URL"
+      value: "http://file-api-svc:3001"
+    - name: "RABBIT_MQ_SERVER"
+      value: "rabbitmq-svc"
+pvc:
+  enabled: false
+
