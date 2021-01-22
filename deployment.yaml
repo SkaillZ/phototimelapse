@@ -79,7 +79,7 @@ spec:
         app: file-api
     spec:
       containers:
-        - image: skaillz/phototimelapse-file-api:latest-dev
+        - image: skaillz/phototimelapse-file-api:latest
           name: file-api
           ports:
             - containerPort: 3001
@@ -111,7 +111,7 @@ spec:
         app: frontend
     spec:
       containers:
-        - image: skaillz/phototimelapse-frontend:latest-dev
+        - image: skaillz/phototimelapse-frontend:latest
           name: frontend
           ports:
             - containerPort: 3000
@@ -165,7 +165,7 @@ spec:
         app: worker
     spec:
       containers:
-        - image: skaillz/phototimelapse-worker:latest-dev
+        - image: skaillz/phototimelapse-worker:latest
           name: worker
           env:
             - name: 'FILE_API_URL'

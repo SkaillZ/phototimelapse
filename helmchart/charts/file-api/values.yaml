@@ -2,7 +2,7 @@ subname: file-api
 annotations:
   enabled: true
 container:
-  image: skaillz/phototimelapse-file-api:latest-dev
+  image: skaillz/phototimelapse-file-api:latest
   ports: 
       singlePort: true
       port: 3001
