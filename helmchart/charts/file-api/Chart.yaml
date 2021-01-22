@@ -1,0 +1,9 @@
+apiVersion: v2
+name: fileapichart
+description: A Helm chart for the file-api of the phototimelapse website.
+
+type: application
+
+version: 1.0.0
+
+appVersion: 1.0.0

@@ -1,0 +1,203 @@
+#file-api persistent volume claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: file-api-pvc
+  labels:
+    app: file-api
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+#file-api service
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-api-svc
+  labels:
+    app: file-api
+spec:
+  ports:
+    - port: 3001
+      targetPort: 3001
+  selector:
+    app: file-api
+  type: LoadBalancer
+---
+#frontend service
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  labels:
+    app: frontend
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+  selector:
+    app: frontend
+  type: LoadBalancer
+---
+#rabbitmq service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-svc
+  labels:
+    app: rabbitmq
+spec:
+  ports:
+    - port: 5671
+      name: port-one
+    - port: 5672
+      name: port-two
+  selector:
+    app: rabbitmq
+  type: LoadBalancer
+---
+#file-api deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-api-dpm
+  annotations:
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-size-slug: "lb-large"
+  labels:
+    app: file-api
+spec:
+  selector:
+    matchLabels:
+      app: file-api
+  template:
+    metadata:
+      labels:
+        app: file-api
+    spec:
+      containers:
+      - image: skaillz/phototimelapse-file-api:latest-dev
+        name: file-api
+        ports:
+        - containerPort: 3001
+        volumeMounts:
+        - name: file-api-volume
+          mountPath: /file-api/uploads
+      volumes:
+      - name: file-api-volume
+        persistentVolumeClaim:
+          claimName: file-api-pvc
+---
+#frontend deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-dpm
+  annotations:
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-size-slug: "lb-large"
+  labels:
+    app: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: skaillz/phototimelapse-frontend:latest-dev
+        name: frontend
+        ports:
+        - containerPort: 3000
+        env:
+          - name: "FILE_API_URL"
+            value: "http://file-api-svc:3001"
+          - name: "FILE_API_URL_EXTERNAL"
+            value: "https://file-api.skaillz.net"
+          - name: "RABBIT_MQ_SERVER"
+            value: "rabbitmq-svc"
+---
+#rabbitmq deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-dpm
+  labels:
+    app: rabbitmq
+spec:
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - image: rabbitmq:3-alpine
+        name: rabbitmq
+        ports:
+        - containerPort: 5671
+          name: port-one
+        - containerPort: 5672
+          name: port-two
+---
+#worker deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-dpm
+  labels:
+    app: worker
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - image: skaillz/phototimelapse-worker:latest-dev
+        name: worker
+        env:
+          - name: "FILE_API_URL"
+            value: "http://file-api-svc:3001"
+          - name: "RABBIT_MQ_SERVER"
+            value: "rabbitmq-svc"
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: phototimelapse-igs
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - phototimelapse.skaillz.net
+    - file-api.skaillz.net
+    secretName: phototimelapse-tls
+  rules:
+  - host: phototimelapse.skaillz.net
+    http:
+      paths:
+      - backend:
+          serviceName: frontend-svc
+          servicePort: 3000
+  - host: file-api.skaillz.net
+    http:
+      paths:
+      - backend:
+          serviceName: file-api-svc
+          servicePort: 3001
+---
+

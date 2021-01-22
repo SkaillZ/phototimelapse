@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.name }}-igs
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - phototimelapse.skaillz.net
+    - file-api.skaillz.net
+    secretName: phototimelapse-tls
+  rules:
+  - host: {{ .Values.ingress.frontendDomain }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.ingress.frontendService }}
+          servicePort: {{ .Values.ingress.frontendServicePort }}
+  - host: {{ .Values.ingress.fileapiDomain }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.ingress.fileapiService }}
+          servicePort: {{ .Values.ingress.fileapiServicePort }}
