@@ -3,6 +3,8 @@ name: docker-hub
 on:
   push:
     branches: [master]
+  release:
+    types: [published]
 
 jobs:
   docker-hub:
