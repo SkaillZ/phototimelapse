@@ -36,8 +36,8 @@ metadata:
     app: frontend
 spec:
   ports:
-  - port: 3000
-    targetPort: 3000
+    - port: 3000
+      targetPort: 3000
   selector:
     app: frontend
   type: LoadBalancer
@@ -65,8 +65,8 @@ kind: Deployment
 metadata:
   name: file-api-dpm
   annotations:
-    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
-    service.beta.kubernetes.io/do-loadbalancer-size-slug: "lb-large"
+    service.beta.kubernetes.io/do-loadbalancer-protocol: 'http'
+    service.beta.kubernetes.io/do-loadbalancer-size-slug: 'lb-large'
   labels:
     app: file-api
 spec:
@@ -79,17 +79,17 @@ spec:
         app: file-api
     spec:
       containers:
-      - image: skaillz/phototimelapse-file-api:latest-dev
-        name: file-api
-        ports:
-        - containerPort: 3001
-        volumeMounts:
-        - name: file-api-volume
-          mountPath: /file-api/uploads
+        - image: skaillz/phototimelapse-file-api:latest-dev
+          name: file-api
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - name: file-api-volume
+              mountPath: /file-api/uploads
       volumes:
-      - name: file-api-volume
-        persistentVolumeClaim:
-          claimName: file-api-pvc
+        - name: file-api-volume
+          persistentVolumeClaim:
+            claimName: file-api-pvc
 ---
 #frontend deployment
 apiVersion: apps/v1
@@ -97,8 +97,8 @@ kind: Deployment
 metadata:
   name: frontend-dpm
   annotations:
-    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
-    service.beta.kubernetes.io/do-loadbalancer-size-slug: "lb-large"
+    service.beta.kubernetes.io/do-loadbalancer-protocol: 'http'
+    service.beta.kubernetes.io/do-loadbalancer-size-slug: 'lb-large'
   labels:
     app: frontend
 spec:
@@ -111,17 +111,17 @@ spec:
         app: frontend
     spec:
       containers:
-      - image: skaillz/phototimelapse-frontend:latest-dev
-        name: frontend
-        ports:
-        - containerPort: 3000
-        env:
-          - name: "FILE_API_URL"
-            value: "http://file-api-svc:3001"
-          - name: "FILE_API_URL_EXTERNAL"
-            value: "https://file-api.skaillz.net"
-          - name: "RABBIT_MQ_SERVER"
-            value: "rabbitmq-svc"
+        - image: skaillz/phototimelapse-frontend:latest-dev
+          name: frontend
+          ports:
+            - containerPort: 3000
+          env:
+            - name: 'FILE_API_URL'
+              value: 'http://file-api-svc:3001'
+            - name: 'FILE_API_URL_EXTERNAL'
+              value: 'https://file-api.skaillz.net'
+            - name: 'RABBIT_MQ_SERVER'
+              value: 'rabbitmq-svc'
 ---
 #rabbitmq deployment
 apiVersion: apps/v1
@@ -140,13 +140,13 @@ spec:
         app: rabbitmq
     spec:
       containers:
-      - image: rabbitmq:3-alpine
-        name: rabbitmq
-        ports:
-        - containerPort: 5671
-          name: port-one
-        - containerPort: 5672
-          name: port-two
+        - image: rabbitmq:3-alpine
+          name: rabbitmq
+          ports:
+            - containerPort: 5671
+              name: port-one
+            - containerPort: 5672
+              name: port-two
 ---
 #worker deployment
 apiVersion: apps/v1
@@ -165,13 +165,13 @@ spec:
         app: worker
     spec:
       containers:
-      - image: skaillz/phototimelapse-worker:latest-dev
-        name: worker
-        env:
-          - name: "FILE_API_URL"
-            value: "http://file-api-svc:3001"
-          - name: "RABBIT_MQ_SERVER"
-            value: "rabbitmq-svc"
+        - image: skaillz/phototimelapse-worker:latest-dev
+          name: worker
+          env:
+            - name: 'FILE_API_URL'
+              value: 'http://file-api-svc:3001'
+            - name: 'RABBIT_MQ_SERVER'
+              value: 'rabbitmq-svc'
 ---
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
@@ -182,22 +182,22 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   tls:
-  - hosts:
-    - phototimelapse.skaillz.net
-    - file-api.skaillz.net
-    secretName: phototimelapse-tls
+    - hosts:
+        - phototimelapse.skaillz.net
+        - file-api.skaillz.net
+      secretName: phototimelapse-tls
   rules:
-  - host: phototimelapse.skaillz.net
-    http:
-      paths:
-      - backend:
-          serviceName: frontend-svc
-          servicePort: 3000
-  - host: file-api.skaillz.net
-    http:
-      paths:
-      - backend:
-          serviceName: file-api-svc
-          servicePort: 3001
+    - host: phototimelapse.skaillz.net
+      http:
+        paths:
+          - backend:
+              serviceName: frontend-svc
+              servicePort: 3000
+    - host: file-api.skaillz.net
+      http:
+        paths:
+          - backend:
+              serviceName: file-api-svc
+              servicePort: 3001
 ---
 
